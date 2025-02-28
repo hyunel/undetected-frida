@@ -61,3 +61,4 @@ With that said, one should never consider symptomatic substring-based detection 
 - [@lico-n](https://github.com/lico-n)
 - [@Thiasap](https://github.com/Thiasap)
 - [@Rycoh99](https://github.com/Rycoh99)
+- [@1BYTE1337](https://github.com/1BYTE1337)

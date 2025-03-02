@@ -119,6 +119,8 @@ jobs:
 
         ./configure --prefix="${PWD}/build" --host="${{ matrix.os }}-${{ matrix.arch }}" --enable-frida-tools --enable-gadget --enable-server --enable-portal --enable-gadget -- -Dfrida-gum:devkits=gum,gumjs -Dfrida-core:devkits=core
         make
+
+        python ../strongR-frida/frida-core/anti-anti-frida.py build/subprojects/frida-core/server/frida-server
         popd
 
     - name: Ship artifacts
@@ -134,7 +136,6 @@ jobs:
         compr="xz ${XZ_OPT}:xz"
 
         pushd frida
-        gh_release_put subprojects/frida-core/src/anti-anti-frida.py anti-anti-frida.py ||:
 
         for j in server inject; do  # bin
           #upx --lzma --best "build/frida-${{ matrix.os }}-${{ matrix.arch }}/bin/frida-${j}"
@@ -144,7 +145,6 @@ jobs:
           ${compr%:*} -k "${_src}"
           gh_release_put "${_src}.${compr#*:}" "${GITHUB_REPOSITORY##*/}-${j}-${FRIDA_VERSION}-${{ matrix.os }}-${{ matrix.arch }}.${compr#*:}"
         done
-        python subprojects/frida-core/src/anti-anti-frida.py build/subprojects/frida-core/server/frida-server
         mv build/subprojects/frida-core/server/frida-server ../frida-server-${{ matrix.arch }}
 
         #[ "$(echo ${{ matrix.arch }} | sed 's/64$//')" != "${{ matrix.arch }}" ] && bit_width=64 || bit_width=32
@@ -155,7 +155,6 @@ jobs:
         ${compr%:*} -k "${_src}"
         gh_release_put "${_src}.${compr#*:}" "${GITHUB_REPOSITORY##*/}-gadget-${FRIDA_VERSION}-${{ matrix.os }}-${{ matrix.arch }}.so.${compr#*:}"
 
-        #python subprojects/frida-core/src/anti-anti-frida.py "${_src}"
         rm "${_src}.${compr#*:}"; ${compr%:*} -k "${_src}"
         mv "${_src}.${compr#*:}" "../libgadget-${{ matrix.arch }}.so.${compr#*:}"
 

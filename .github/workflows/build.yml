@@ -1,10 +1,11 @@
 name: undetected-frida
 
 on:
-  schedule:
-  - cron: "0 9/12 * * *"
   workflow_dispatch:
-
+    inputs:
+      version:
+        description: 'Frida version to build'  
+        default: 'latest'
 jobs:
   check:
     runs-on: ubuntu-22.04
@@ -12,8 +13,7 @@ jobs:
     - name: Check for existing release
       id: check
       run: |
-        frida_version="$(curl -fs https://api.github.com/repos/frida/frida/releases | jq -r .[].tag_name | sort -nr | head -n1)"
-        frida_version="$(curl -fs https://api.github.com/repos/frida/frida/releases/latest | jq -r .tag_name)"
+        frida_version="$(curl -fs https://api.github.com/repos/frida/frida/releases/${{ github.event.inputs.version }} | jq -r .tag_name)"
         echo "FRIDA_VERSION=${frida_version}" >> "${GITHUB_OUTPUT}"  # gh env?
 
         release_exists=0
@@ -45,7 +45,6 @@ jobs:
         echo '{"tag_name":"${{ needs.check.outputs.FRIDA_VERSION }}","name":"${{ needs.check.outputs.FRIDA_VERSION }}","body":"${{ needs.check.outputs.FRIDA_VERSION }}","draft":true}' | curl -fs -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: application/json" -d@- "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases" >"${tmpfile}"
 
         echo "RELEASE_ID=$(jq -r .id "${tmpfile}")" >> "${GITHUB_OUTPUT}"
-        #echo "UPLOAD_URL=$(jq -r .upload_url "${tmpfile}")" >> "${GITHUB_OUTPUT}"
     outputs:
       RELEASE_ID: ${{ steps.create.outputs.RELEASE_ID }}
 
@@ -54,7 +53,6 @@ jobs:
     needs:
     - check
     - create
-    if: needs.check.outputs.RELEASE_EXISTS == '0'
     strategy:
       matrix:
         arch:
@@ -191,7 +189,6 @@ jobs:
     - check
     - create
     - build
-    if: needs.check.outputs.RELEASE_EXISTS == '0'
     steps:
     - uses: actions/checkout@v4
     - name: Pass artifacts for Magisk module
